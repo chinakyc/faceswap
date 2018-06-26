@@ -8,27 +8,27 @@ TRANSFORM_PRC = 115.
 
 
 class Trainer():
-    
+
     _random_transform_args = {
         'rotation_range': 10 * (TRANSFORM_PRC * .01),
         'zoom_range': 0.05 * (TRANSFORM_PRC * .01),
         'shift_range': 0.05 * (TRANSFORM_PRC * .01),
         'random_flip': 0.4 * (TRANSFORM_PRC * .01),
     }
-    
+
     def __init__(self, model, fn_A, fn_B, batch_size, *args):
         self.batch_size = batch_size
         self.model = model
         from timeit import default_timer as clock
         self._clock = clock
-        
-        generator = TrainingDataGenerator(self.random_transform_args, 160, 5, zoom=2)        
-        
+
+        generator = TrainingDataGenerator(self.random_transform_args, 160, 5, zoom=2)
+
         self.images_A = generator.minibatchAB(fn_A, self.batch_size)
         self.images_B = generator.minibatchAB(fn_B, self.batch_size)
-                
-        self.generator = generator        
-        
+
+        self.generator = generator
+
 
     def train_one_step(self, iter_no, viewer):
         when = self._clock()
@@ -37,17 +37,16 @@ class Trainer():
 
         loss_A = self.model.autoencoder_A.train_on_batch(warped_A, target_A)
         loss_B = self.model.autoencoder_B.train_on_batch(warped_B, target_B)
-        
-        self.model._epoch_no += 1        
-                    
+
+        self.model._epoch_no += 1
+
         print("[{0}] [#{1:05d}] [{2:.3f}s] loss_A: {3:.5f}, loss_B: {4:.5f}".format(
-            time.strftime("%H:%M:%S"), self.model._epoch_no, self._clock()-when, loss_A, loss_B),
-            end='\r')
-        
+            time.strftime("%H:%M:%S"), self.model._epoch_no, self._clock()-when, loss_A, loss_B))
+
 
         if viewer is not None:
             viewer(self.show_sample(target_A[0:8], target_B[0:8]), "training using {}, bs={}".format(self.model, self.batch_size))
-            
+
 
     def show_sample(self, test_A, test_B):
         figure_A = numpy.stack([
@@ -72,8 +71,8 @@ class Trainer():
         figure = stack_images(figure)
 
         return numpy.clip(figure * 255, 0, 255).astype('uint8')
-    
-    
+
+
     @property
     def random_transform_args(self):
         return self._random_transform_args
